@@ -2,7 +2,7 @@
 
 A small website where people post things they **lost** or **found**, so the right person can get them back.
 
-**Built with:** React (Vite) for the website, FastAPI + SQLite for the server.
+**Built with:** React (Vite) for the website, FastAPI + PostgreSQL for the server.
 
 ---
 
@@ -60,32 +60,9 @@ A small website where people post things they **lost** or **found**, so the righ
 
 ## How to run it
 
-You need **Python 3.10+** and **Node.js 18+**.
+`docker compose up`
 
-### 1. Start the server (backend)
-
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python seed.py                   # optional: adds 4 sample posts (PIN 1234)
-uvicorn app.main:app --reload
-```
-
-The server runs at http://127.0.0.1:8000. Open http://127.0.0.1:8000/docs to try the API in your browser.
-
-### 2. Start the website (frontend)
-
-Open a second terminal:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Open http://localhost:5173.
+Open the website at **http://localhost:5173/**. 
 
 ---
 
