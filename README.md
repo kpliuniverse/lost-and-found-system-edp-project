@@ -60,7 +60,7 @@ A small website where people post things they **lost** or **found**, so the righ
 
 ## How to run it
 
-`docker compose up`
+Run `docker compose up` at the terminal
 
 Open the website at **http://localhost:5173/**. 
 
