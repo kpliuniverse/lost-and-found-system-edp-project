@@ -9,6 +9,8 @@ services:
             target: runner
         ports:
             - 8000:8000
+        env_file:
+            - ./backend/.env
 
     frontend:
         image: lufs-frontend
@@ -21,3 +23,15 @@ services:
             VITE_PROXY_TARGET: http://backend:8000
         ports:
             - 5173:5173
+
+    database:
+        image: postgres@sha256:800ce8c1c6509d8fb74e1d93cf4aff1f93e13b431dea386d798c52cce0d9a16b
+        container_name: lufs-database
+        env_file:
+            - ./postgresql/.env
+        volumes:
+            - ./postgresql-data:/var/lib/postgresql/data
+
+
+volumes:
+    postgresql-data:

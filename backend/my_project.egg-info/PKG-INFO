@@ -1,0 +1,7 @@
+Metadata-Version: 2.4
+Name: my-project
+Version: 0.1.0
+Requires-Dist: fastapi>=0.110
+Requires-Dist: uvicorn[standard]>=0.29
+Requires-Dist: sqlalchemy>=2.0
+Requires-Dist: psycopg2>=2.9.13
