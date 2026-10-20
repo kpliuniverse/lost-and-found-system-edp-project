@@ -4,4 +4,4 @@ Version: 0.1.0
 Requires-Dist: fastapi>=0.110
 Requires-Dist: uvicorn[standard]>=0.29
 Requires-Dist: sqlalchemy>=2.0
-Requires-Dist: psycopg2>=2.9.13
+Requires-Dist: psycopg>=3.3.6
