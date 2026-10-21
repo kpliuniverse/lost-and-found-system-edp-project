@@ -1,11 +1,18 @@
-from fastapi import Depends, FastAPI, Header, HTTPException, Response, status
+from copy import deepcopy
+import logging
+from pathlib import Path
+from uuid import uuid4
+import shutil
+
+from fastapi import Depends, FastAPI, Header, HTTPException, Response, status, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
-import logging
 
 from .database import Base, engine, get_db
-from .models import Item
+from .models import Item, PostImage
 from .schemas import ItemCreate, ItemOut, Status
 from .security import hash_pin, verify_pin
 
@@ -32,6 +39,7 @@ def get_item_or_404(item_id: int, db: Session) -> Item:
 def require_pin(item: Item, pin: str) -> None:
     if not pin or not verify_pin(pin, item.pin_hash):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Wrong PIN. Please check it and try again.")
+
 
 
 # ---------- LIST + SEARCH ----------
@@ -73,15 +81,42 @@ def list_items(
 def get_item(item_id: int, db: Session = Depends(get_db)):
     return get_item_or_404(item_id, db)
 
+UPLOAD_DIR = Path("/image_uploads")
+
+@app.post("/api/uploadimage")
+def upload_image(file: UploadFile):
+    if file.filename is None or file.filename == "":
+        raise HTTPException(status_code=400, detail="No file selected")
+
+    while (dst := UPLOAD_DIR / f"{str(uuid4())}{Path(file.filename).suffix}").exists():
+        pass
+
+    with open(dst, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    return {
+        "location": dst.as_posix()
+    }
+
+@app.get("api/image", response_class=FileResponse)
+def get_image(id: int, db: Session = Depends(get_db)):
+    if (img := db.get(PostImage, id)) is not None:
+        return UPLOAD_DIR / img.filename
+    else:
+        raise HTTPException(status_code=404)
 
 # ---------- ADD / CREATE ----------
 @app.post("/api/items", response_model=ItemOut, status_code=status.HTTP_201_CREATED)
 def create_item(payload: ItemCreate, db: Session = Depends(get_db)):
-    data = payload.model_dump(exclude={"pin"})
+    data = payload.model_dump(exclude={"pin", "images"})
     item = Item(**data, pin_hash=hash_pin(payload.pin))
     db.add(item)
     db.commit()
     db.refresh(item)
+
+    if payload.image_filenames:
+        for image in payload.image_filenames:
+            item.images.append(PostImage(filename=image, post=item))
     return item
 
 

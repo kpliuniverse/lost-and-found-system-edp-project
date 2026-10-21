@@ -1,7 +1,16 @@
-{
-  "python.analysis.extraPaths": [
-    "${workspaceFolder}"
-  ],
-  "python.analysis.autoSearchPaths": true
 
+{
+    "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv",
+
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/backend"
+    ],
+
+    "python.analysis.importFormat": "absolute",
+
+    "pylint.importStrategy": "fromEnvironment",
+
+    "python-envs.workspaceSearchPaths": [
+        "./backend"
+    ]
 }

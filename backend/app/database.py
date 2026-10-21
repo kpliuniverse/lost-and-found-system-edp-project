@@ -4,11 +4,10 @@ from pathlib import Path
 import time
 
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker, DeclarativeBase, MappedAsDataclass
 from sqlalchemy.exc import OperationalError
 
-
-# A single local file. Delete lost_and_found.db any time to start fresh.
+# Database might start later than it creates the engine
 DATABASE_URL = os.environ["POSTGRES_URL"]
 ATTEMPTS = 5
 for i in range(ATTEMPTS):
@@ -24,8 +23,8 @@ for i in range(ATTEMPTS):
         time.sleep(5)
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False) # type: ignore
-Base = declarative_base()
-
+class Base(MappedAsDataclass, DeclarativeBase):
+    pass
 
 def get_db():
     """Give each request its own database session, then close it."""
