@@ -1,4 +1,4 @@
-# THIS IS FOR PRODUCTION NOT DEPLOYMENT
+# THIS IS FOR DEVELOPMENT NOT PRODUCTION
 services:
     backend:
         depends_on:
@@ -15,8 +15,9 @@ services:
             POSTGRES_URL: postgresql+psycopg2://main@database:5433/lafs
         secrets:
             - pgpass
-        
-
+        ports:
+            - localhost:8000:8000
+            
     frontend:
         depends_on:
             - backend
@@ -29,7 +30,7 @@ services:
         environment:
             VITE_PROXY_TARGET: http://backend:8000
         ports:
-            - 0.0.0.0:5173:5173
+            - localhost:5173:5173
 
     database:
         image: postgres@sha256:800ce8c1c6509d8fb74e1d93cf4aff1f93e13b431dea386d798c52cce0d9a16b
