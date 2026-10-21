@@ -43,11 +43,14 @@ services:
         secrets:
             - pgpass
             - pgpassword
+
+        volumes:
+            - postgres-data:/var/lib/postgresql
         
 
 
 volumes:
-    postgresql-data:
+    postgres-data:
 
 secrets:
     pgpass:
