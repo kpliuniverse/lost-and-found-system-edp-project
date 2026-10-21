@@ -2,11 +2,13 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
+import logging
 
 from .database import Base, engine, get_db
 from .models import Item
 from .schemas import ItemCreate, ItemOut, Status
 from .security import hash_pin, verify_pin
+
 
 Base.metadata.create_all(bind=engine)
 

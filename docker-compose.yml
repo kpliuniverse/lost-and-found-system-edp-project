@@ -1,5 +1,8 @@
+
 services:
     backend:
+        depends_on:
+            - database
         image: lufs-backend
         pull_policy: never
         container_name: lufs-backend
@@ -7,10 +10,16 @@ services:
             context: ./backend
             dockerfile: Dockerfile
             target: runner
-        env_file:
-            - ./backend/.env
+        environment:
+            PGPASSFILE: /run/secrets/pgpass
+            POSTGRES_URL: postgresql+psycopg2://main@database:5433/lafs
+        secrets:
+            - pgpass
+        
 
     frontend:
+        depends_on:
+            - backend
         image: lufs-frontend
         pull_policy: never
         container_name: lufs-frontend
@@ -25,11 +34,23 @@ services:
     database:
         image: postgres@sha256:800ce8c1c6509d8fb74e1d93cf4aff1f93e13b431dea386d798c52cce0d9a16b
         container_name: lufs-database
-        env_file:
-            - ./postgresql/.env
-        volumes:
-            - ./postgresql-data:/var/lib/postgresql/data
+        environment:
+            PGPORT: 5433
+            POSTGRES_USER: main
+            POSTGRES_DB: lafs
+            POSTGRES_PASSWORD_FILE: /run/secrets/pgpassword
+            PGPASSFILE: /run/secrets/pgpass
+        secrets:
+            - pgpass
+            - pgpassword
+        
 
 
 volumes:
     postgresql-data:
+
+secrets:
+    pgpass:
+        file: secrets/.pgpass
+    pgpassword:
+        file: secrets/pgpassword

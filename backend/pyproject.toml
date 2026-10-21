@@ -8,10 +8,11 @@ exclude = ["wheels*"]
 
 [project]
 name = "my-project"
+requires-python = ">=3.14"
 version = "0.1.0"
 dependencies = [
     "fastapi>=0.110",
     "uvicorn[standard]>=0.29",
     "sqlalchemy>=2.0",
-    "psycopg2>=2.9.13",
+    "psycopg2-binary",
 ]
