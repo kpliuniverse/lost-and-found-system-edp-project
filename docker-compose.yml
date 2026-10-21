@@ -45,13 +45,13 @@ services:
             - pgpassword
 
         volumes:
-            - postgres-data:/var/lib/postgresql
+            - lafs-volume:/var/lib/postgresql
         
 
 
 volumes:
-    postgres-data:
-
+    lafs-volume:
+    
 secrets:
     pgpass:
         file: secrets/.pgpass
