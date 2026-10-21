@@ -1,4 +1,4 @@
-
+# THIS IS FOR PRODUCTION NOT DEPLOYMENT
 services:
     backend:
         depends_on:
