@@ -5,6 +5,9 @@ app/main.py
 app/models.py
 app/schemas.py
 app/security.py
+app/alembic/env.py
+app/alembic/versions/4a63451fb44d_added_post_images.py
+app/alembic/versions/7d94510fae93_create_table_items.py
 my_project.egg-info/PKG-INFO
 my_project.egg-info/SOURCES.txt
 my_project.egg-info/dependency_links.txt
