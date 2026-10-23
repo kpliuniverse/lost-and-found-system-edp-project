@@ -2,6 +2,13 @@
   "python.analysis.extraPaths": [
     "${workspaceFolder}"
   ],
-  "python.analysis.autoSearchPaths": true
+  "python.analysis.autoSearchPaths": true,
+  "python-envs.pythonProjects": [
+    {
+      "path": ".",
+      "envManager": "ms-python.python:venv",
+      "packageManager": "ms-python.python:pip"
+    }
+  ]
 
 }
