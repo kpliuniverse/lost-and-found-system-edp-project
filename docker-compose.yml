@@ -8,8 +8,7 @@ services:
         container_name: lufs-backend
         build:
             context: ./backend
-            dockerfile: Dockerfile
-            target: runner
+            dockerfile: Dev.Dockerfile
         environment:
             PGPASSFILE: /run/secrets/pgpass
             POSTGRES_URL: postgresql+psycopg2://main@database:5433/lafs
@@ -22,8 +21,12 @@ services:
                 cp "$$PGPASSFILE" /tmp/pgpass &&
                 chmod 600 /tmp/pgpass &&
                 export PGPASSFILE=/tmp/pgpass &&
-                exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+                exec uv run fastapi dev --host backend --port 8000
 
+        ports:
+            - 127.0.0.1:8000:8000
+        volumes:
+            - lafs-volume:/image_uploads
 
     frontend:
         depends_on:
@@ -37,7 +40,7 @@ services:
         environment:
             VITE_PROXY_TARGET: http://backend:8000
         ports:
-            - 0.0.0.0:5173:5173
+            - 5173:5173
 
     database:
         image: postgres@sha256:800ce8c1c6509d8fb74e1d93cf4aff1f93e13b431dea386d798c52cce0d9a16b

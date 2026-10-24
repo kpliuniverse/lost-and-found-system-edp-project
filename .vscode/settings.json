@@ -1,14 +1,25 @@
+
 {
-  "python.analysis.extraPaths": [
-    "${workspaceFolder}"
-  ],
+    "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv",
+
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/backend"
+    ],
+
+    "python.analysis.importFormat": "absolute",
+
+    "pylint.importStrategy": "fromEnvironment",
+
+    "python-envs.workspaceSearchPaths": [
+        "./backend"
+    ],
+
   "python.analysis.autoSearchPaths": true,
   "python-envs.pythonProjects": [
     {
-      "path": ".",
+      "path": "./backend",
       "envManager": "ms-python.python:venv",
       "packageManager": "ms-python.python:pip"
     }
   ]
-
 }

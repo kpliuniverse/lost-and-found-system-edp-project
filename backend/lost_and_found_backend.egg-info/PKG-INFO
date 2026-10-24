@@ -1,0 +1,12 @@
+Metadata-Version: 2.4
+Name: lost-and-found-backend
+Version: 0.1.0
+Requires-Python: >=3.14
+Requires-Dist: fastapi[standard]>=0.110
+Requires-Dist: uvicorn[standard]>=0.29
+Requires-Dist: sqlalchemy>=2.0
+Requires-Dist: psycopg2-binary
+Requires-Dist: alembic>=1.20.0
+Requires-Dist: pendulum>=3.3.0
+Requires-Dist: python-multipart>=0.0.32
+Requires-Dist: python-magic>=0.4.27

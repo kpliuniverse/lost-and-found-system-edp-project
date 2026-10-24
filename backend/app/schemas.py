@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -18,7 +18,14 @@ class ItemCreate(BaseModel):
     contact_name: str = Field(min_length=2, max_length=80)
     contact_info: str = Field(min_length=3, max_length=120)
     pin: str = Field(min_length=4, max_length=20)
+    image_filenames: Optional[list[str]] = None
 
+    @field_validator("image_filenames", mode="before")
+    @classmethod
+    def validate_image_input(cls, value):
+        if value is not None and len(value) > 8:
+            raise ValueError("Eight photo limit")
+        return value
     @field_validator(
         "title", "description", "category", "location", "contact_name", "contact_info",
         mode="before",
@@ -34,6 +41,12 @@ class ItemCreate(BaseModel):
             raise ValueError("Date cannot be in the future")
         return value
 
+class ImageModel(BaseModel):
+    """The image that is returned alongside ItemOut"""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
 
 class ItemOut(BaseModel):
     """What the browser gets back. The PIN is never included."""
@@ -51,3 +64,5 @@ class ItemOut(BaseModel):
     contact_info: str
     is_resolved: bool
     created_at: datetime
+    image_filenames: list[ImageModel] = Field(validation_alias="images")
+    

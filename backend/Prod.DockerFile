@@ -1,4 +1,5 @@
 
+# DO NOT USE THIS, THIS WILL BE USEFUL ONCE MAKING THE PRODUCTION DOCKERFILE
 FROM python@sha256:122756f3fe72c4f5d3d71897888204ee85774bc79de952555b8a474e1d0a5d53 AS builder
 
 COPY --from=ghcr.io/astral-sh/uv@sha256:9f130421e930bfbdc563c00740466603f8723158e90297d07957c2294640262b /uv /uvx /bin/
@@ -43,6 +44,7 @@ FROM python@sha256:122756f3fe72c4f5d3d71897888204ee85774bc79de952555b8a474e1d0a5
 WORKDIR /app
 
 COPY --from=builder /wheels /wheels
+COPY --from=builder /app/pyproject.toml . 
 
 RUN pip install --no-cache-dir \
     --no-index \
