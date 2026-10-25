@@ -46,7 +46,7 @@ class ImageModel(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    filename: str
 
 class ItemOut(BaseModel):
     """What the browser gets back. The PIN is never included."""
