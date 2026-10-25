@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { deleteItem, getItem, markReturned } from "../api.js";
+import { deleteItem, getItem, markReturned, getImageUrl } from "../api.js";
 import { formatDate, statusLabel } from "../utils.js";
+import { Splide, SplideSlide } from "@splidejs/react-splide";
+import "@splidejs/react-splide/css";
+import Carousel from "../components/ThumbnailCarousel.jsx";
+import ThumbnailCarousel from "../components/ThumbnailCarousel.jsx";
 
 export default function ItemPage() {
   const { id } = useParams();
@@ -61,6 +65,7 @@ export default function ItemPage() {
     );
   }
   if (!item) return <p className="count">Loading…</p>;
+  const images = item.image_filenames ?? [];
 
   return (
     <section className="narrow">
@@ -97,7 +102,11 @@ export default function ItemPage() {
         </dl>
 
         {item.description && <p className="detail__text">{item.description}</p>}
-
+        {images.length > 0 && (
+          <section className="images">
+            <ThumbnailCarousel imageURLs={item.image_filenames.map(e => getImageUrl(e.filename))}/>
+          </section>
+        )}
         <div className="contact">
           <h2>Contact {item.contact_name}</h2>
           <p>{item.contact_info}</p>

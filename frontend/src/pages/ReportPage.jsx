@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { createItem } from "../api.js";
+import { createItem, getImageUrl, uploadImage } from "../api.js";
 import { CATEGORIES, todayISO } from "../utils.js";
+
+const MAX_IMAGES = 8;
+const MAX_IMAGE_SIZE = 8 * 1024 * 1024;
 
 export default function ReportPage() {
   const navigate = useNavigate();
@@ -18,13 +21,59 @@ export default function ReportPage() {
     contact_info: "",
     pin: "",
   });
+  const [images, setImages] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState("");
-
   const isLost = form.status === "lost";
 
   function update(e) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  }
+
+  async function selectImages(e) {
+    const selected = Array.from(e.target.files ?? []);
+    e.target.value = "";
+
+    if (images.length + selected.length > MAX_IMAGES) {
+      setError(`You can only upload up to ${MAX_IMAGES} images.`);
+      return;
+    }
+    if (selected.some((file) => !file.type.startsWith("image/"))) {
+      setError("Please select image files only.");
+      return;
+    }
+
+    if (selected.some((file) => file.size > MAX_IMAGE_SIZE)) {
+      setError("Each image must be 8MB or smaller.");
+      return;
+    }
+
+    setUploading(true);
+    setUploadProgress(0);
+    setError("");
+    try {
+      const totalBytes = selected.reduce((total, file) => total + file.size, 0);
+      let completedBytes = 0;
+      for (const file of selected) {
+        const { location } = await uploadImage(file, (loaded) => {
+          const currentBytes = completedBytes + Math.min(loaded, file.size);
+          setUploadProgress(totalBytes ? Math.round((currentBytes / totalBytes) * 100) : 100);
+        });
+        const filename = location?.split("/").pop();
+        if (!filename) {
+          throw new Error(`The upload response for "${file.name}" did not include a filename.`);
+        }
+        setImages((current) => [...current, { file, filename }]);
+        completedBytes += file.size;
+        setUploadProgress(totalBytes ? Math.round((completedBytes / totalBytes) * 100) : 100);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function submit(e) {
@@ -32,12 +81,16 @@ export default function ReportPage() {
     setSaving(true);
     setError("");
     try {
-      const item = await createItem(form);
+      const item = await createItem({
+        ...form,
+        image_filenames: images.map(({ filename }) => filename),
+      });
       navigate(`/items/${item.id}`, {
         state: { notice: "Your post is live. Keep your PIN safe: you need it to delete or close the post." },
       });
     } catch (err) {
       setError(err.message);
+    } finally {
       setSaving(false);
     }
   }
@@ -120,6 +173,50 @@ export default function ReportPage() {
           </label>
         </div>
 
+        <div className="row">
+          <label className="field entirerow">
+            Images
+            <input
+              type="file"
+              name="images"
+              accept="image/*"
+              multiple
+              disabled={saving || uploading}
+              onChange={selectImages}
+            />
+            <small>
+              Optional. Select up to {MAX_IMAGES} images. 8MB limit. Click on image to remove from post.
+              {uploading && " Uploading images…"}
+            </small>
+            {uploading && (
+              <div className="upload-progress">
+                <progress value={uploadProgress} max="100" aria-label="Image upload progress" />
+                <span>{uploadProgress}%</span>
+              </div>
+            )}
+
+          </label>
+          {images.length > 0 && (
+              // <ul>
+              //   {images.map(({ file, filename }, index) => (
+              //     <li key={`${filename}-${index}`}>
+              //       {filename}{" "}
+              //       <button
+              //         type="button"
+              //         disabled={saving || uploading}
+              //         onClick={() => setImages((current) => current.filter((_, i) => i !== index))}
+              //         aria-label={`Remove ${file.name}`}
+              //       >
+              //         Remove
+              //       </button>
+              //     </li>
+              //   ))}
+              // </ul>
+            <div className="uploadedImagePreview">
+                {images.map(({filename}, index) => <img src={getImageUrl(filename)} onClick={() => setImages((current) => current.filter((_, i) => i !== index))}/>)}
+            </div>
+        )}
+        </div>
         <label className="field">
           Choose a PIN (4 to 20 characters)
           <input
@@ -141,8 +238,8 @@ export default function ReportPage() {
           </p>
         )}
 
-        <button className="btn" disabled={saving}>
-          {saving ? "Posting…" : "Post item"}
+        <button className="btn" disabled={saving || uploading}>
+          {uploading ? "Uploading…" : saving ? "Posting…" : "Post item"}
         </button>
       </form>
     </section>
