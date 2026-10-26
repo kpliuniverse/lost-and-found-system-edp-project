@@ -104,7 +104,6 @@ lost-and-found/
 
 ## Good next steps
 
-- Photo upload for each item
 - User accounts instead of PINs
 - Email alert when a new post matches something you lost
 - Pagination when there are many posts
