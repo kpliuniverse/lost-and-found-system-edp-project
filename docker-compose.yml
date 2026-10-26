@@ -43,7 +43,7 @@ services:
             - 5173:5173
 
     database:
-        image: postgres@sha256:800ce8c1c6509d8fb74e1d93cf4aff1f93e13b431dea386d798c52cce0d9a16b
+        image: pgvector/pgvector@sha256:9d9c930220cb9bf2f956d10a8f909cf9973d9672ca0278aef2c1e6facccad2e0
         container_name: lufs-database
         environment:
             PGPORT: 5433
@@ -59,11 +59,24 @@ services:
         volumes:
             - lafs-volume:/var/lib/postgresql
         
-
+    ollama:
+        image: ollama/ollama@sha256:dea72d1e22270fe095b68fdf756d2b489d615643c5a2eaebbc5f569181e322d8
+        container_name: ollama
+        ports:
+            - 11434:11434
+        volumes:
+            - ./model_files:/model_files
+            - ollama:/root/.ollama
+        pull_policy: always
+        tty: true
+        restart: unless-stopped
+        entrypoint: ["/bin/sh", "/model_files/run_ollama.sh"]
+    
 
 volumes:
     lafs-volume:
     
+    ollama:
 secrets:
     pgpass:
         file: secrets/.pgpass
