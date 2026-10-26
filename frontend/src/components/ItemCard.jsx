@@ -10,7 +10,13 @@ export default function ItemCard({ item }) {
         {item.is_resolved && <span className="chip chip--returned">Returned</span>}
       </div>
       <h3 className="tag__title">{item.title}</h3>
-      <img style={{width: "100%"}} src={getImageUrl(item.image_filenames[0].filename)}/>
+      {item.image_filenames?.[0] && (
+        <img
+          style={{ width: "100%" }}
+          src={getImageUrl(item.image_filenames[0].filename)}
+          alt={`${item.title}`}
+        />
+      )}
       <p className="tag__meta">{item.category}</p>
       <p className="tag__meta">{item.location}</p>
       <p className="tag__meta">{formatDate(item.event_date)}</p>
