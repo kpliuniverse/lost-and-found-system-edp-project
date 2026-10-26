@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { Splide, SplideSlide } from "@splidejs/react-splide";
 import "@splidejs/react-splide/css";
 
-export default function ThumbnailCarousel({ imageURLs }) {
+export default function ThumbnailCarousel({ imageURLs, onImageClick }) {
     if (imageURLs.length === 0) {
         return
     }
@@ -38,15 +38,33 @@ export default function ThumbnailCarousel({ imageURLs }) {
     };
 
     if (imageURLs.length === 1) {
-        return <div className="thumbnail-carousel"><img src={imageURLs[0]} style={style}/></div>
+        return (
+            <div className="thumbnail-carousel">
+                <button
+                    type="button"
+                    className="thumbnail-carousel__image"
+                    onClick={() => onImageClick(imageURLs[0])}
+                    aria-label="View item image full size"
+                >
+                    <img src={imageURLs[0]} alt="Item" style={style} />
+                </button>
+            </div>
+        );
     }
 
     return (
         <div className="thumbnail-carousel">
             <Splide options={mainOptions} ref={mainRef} style={{}}>
-                {imageURLs.map((imageURL) => 
-                    <SplideSlide>
-                        <img src={imageURL} style={style}/>
+                {imageURLs.map((imageURL, index) =>
+                    <SplideSlide key={`${imageURL}-${index}`}>
+                        <button
+                            type="button"
+                            className="thumbnail-carousel__image"
+                            onClick={() => onImageClick(imageURL)}
+                            aria-label="View item image full size"
+                        >
+                            <img src={imageURL} alt="Item" style={style} />
+                        </button>
                     </SplideSlide>
                 )}
             </Splide>
@@ -68,4 +86,3 @@ export default function ThumbnailCarousel({ imageURLs }) {
     );
     }
         
-

@@ -1,10 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { deleteItem, getItem, markReturned, getImageUrl } from "../api.js";
 import { formatDate, statusLabel } from "../utils.js";
-import { Splide, SplideSlide } from "@splidejs/react-splide";
-import "@splidejs/react-splide/css";
-import Carousel from "../components/ThumbnailCarousel.jsx";
 import ThumbnailCarousel from "../components/ThumbnailCarousel.jsx";
 
 export default function ItemPage() {
@@ -20,12 +17,25 @@ export default function ItemPage() {
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [selectedImage, setSelectedImage] = useState("");
+  const imageDialogRef = useRef(null);
 
   useEffect(() => {
     getItem(id)
       .then(setItem)
       .catch((err) => setLoadError(err.message));
   }, [id]);
+
+  useEffect(() => {
+    const dialog = imageDialogRef.current;
+    if (!dialog) return;
+
+    if (selectedImage && !dialog.open) {
+      dialog.showModal();
+    } else if (!selectedImage && dialog.open) {
+      dialog.close();
+    }
+  }, [selectedImage]);
 
   async function handleReturned() {
     setBusy(true);
@@ -104,7 +114,10 @@ export default function ItemPage() {
         {item.description && <p className="detail__text">{item.description}</p>}
         {images.length > 0 && (
           <section className="images">
-            <ThumbnailCarousel imageURLs={item.image_filenames.map(e => getImageUrl(e.filename))}/>
+            <ThumbnailCarousel
+              imageURLs={images.map((image) => getImageUrl(image.filename))}
+              onImageClick={setSelectedImage}
+            />
           </section>
         )}
         <div className="contact">
@@ -155,6 +168,23 @@ export default function ItemPage() {
           )}
         </div>
       </section>
+
+      <dialog
+        ref={imageDialogRef}
+        className="image-viewer"
+        aria-label="Full-size item image"
+        onClose={() => setSelectedImage("")}
+      >
+        <button
+          type="button"
+          className="image-viewer__close"
+          aria-label="Close full-size image"
+          onClick={() => setSelectedImage("")}
+        >
+          &times;
+        </button>
+        {selectedImage && <img src={selectedImage} alt={`${item.title} full size`} />}
+      </dialog>
     </section>
   );
 }

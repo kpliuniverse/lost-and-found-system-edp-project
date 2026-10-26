@@ -12,6 +12,7 @@ DATABASE_URL = os.environ["POSTGRES_URL"]
 ATTEMPTS = 5
 for i in range(ATTEMPTS):
     try:
+        logging.info("PASSFILE: %s", os.environ["PGPASSFILE"])
         engine = create_engine(DATABASE_URL, connect_args={"passfile": os.environ["PGPASSFILE"]})
         connection_success = True
         with engine.connect() as conn:
@@ -20,7 +21,7 @@ for i in range(ATTEMPTS):
     except OperationalError as e:
         if i == ATTEMPTS - 1:
             raise e
-        time.sleep(5)
+        time.sleep(1)
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False) # type: ignore
 class Base(MappedAsDataclass, DeclarativeBase):

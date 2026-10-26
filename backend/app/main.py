@@ -1,5 +1,8 @@
 from copy import deepcopy
 import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
 from pathlib import Path
 from uuid import uuid4
 import shutil
@@ -17,7 +20,7 @@ from .schemas import ItemCreate, ItemOut, Status
 from .security import hash_pin, verify_pin
 
 
-logging.basicConfig(level=logging.DEBUG)
+
 
 Base.metadata.create_all(bind=engine)
 
