@@ -54,6 +54,8 @@ services:
         secrets:
             - pgpass
             - pgpassword
+        ports:
+            - 127.0.0.1:5433:5433
         volumes:
             - lafs-volume:/var/lib/postgresql
         

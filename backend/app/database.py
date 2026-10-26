@@ -1,19 +1,25 @@
 import logging
 import os
-from pathlib import Path
 import time
+from pathlib import Path
 
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import declarative_base, sessionmaker, DeclarativeBase, MappedAsDataclass
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    MappedAsDataclass,
+    declarative_base,
+    sessionmaker,
+)
 
 # Database might start later than it creates the engine
-DATABASE_URL = os.environ["POSTGRES_URL"]
-ATTEMPTS = 5
+DATABASE_URL = os.environ.get("POSTGRES_URL", "postgresql+psycopg2://main@127.0.0.1:5433/lafs")
+PGPASSFILE = os.environ.get("PGPASSFILE", (Path(__file__).parent.parent.parent / "secrets/.pgpass").as_posix())
+ATTEMPTS = 8
 for i in range(ATTEMPTS):
     try:
-        logging.info("PASSFILE: %s", os.environ["PGPASSFILE"])
-        engine = create_engine(DATABASE_URL, connect_args={"passfile": os.environ["PGPASSFILE"]})
+        logging.info("PASSFILE: %s, exist=%s", PGPASSFILE, Path(PGPASSFILE).exists()) 
+        engine = create_engine(DATABASE_URL, connect_args={"passfile": PGPASSFILE})
         connection_success = True
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
