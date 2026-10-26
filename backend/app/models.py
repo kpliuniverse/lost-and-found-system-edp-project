@@ -2,6 +2,7 @@ from datetime import date, datetime, timezone
 
 from sqlalchemy import Boolean, Date, DateTime, Integer, String, Text, UniqueConstraint, Uuid, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from pgvector.sqlalchemy import VECTOR
 
 from .database import Base
 
@@ -17,6 +18,7 @@ class Item(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, init=False)
     status: Mapped[str] = mapped_column(String(10), index=True)  # "lost" or "found"
     title: Mapped[str] = mapped_column(String(120))
+    embedding: Mapped[list[float]] = mapped_column(VECTOR(256))
     category: Mapped[str] = mapped_column(String(40), index=True)
     location: Mapped[str] = mapped_column(String(160))
     event_date: Mapped[date] = mapped_column(Date)  # day it was lost / found
@@ -27,7 +29,7 @@ class Item(Base):
     images: Mapped[list["PostImage"]] = relationship("PostImage", back_populates="post", cascade="all, delete-orphan", default_factory=list)
     is_resolved: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default_factory=utc_now)
-
+    
 class PostImage(Base):
 
     __tablename__ = "postimages"

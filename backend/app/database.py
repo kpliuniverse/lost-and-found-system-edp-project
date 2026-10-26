@@ -16,6 +16,7 @@ from sqlalchemy.orm import (
 DATABASE_URL = os.environ.get("POSTGRES_URL", "postgresql+psycopg2://main@127.0.0.1:5433/lafs")
 PGPASSFILE = os.environ.get("PGPASSFILE", (Path(__file__).parent.parent.parent / "secrets/.pgpass").as_posix())
 ATTEMPTS = 8
+engine = None
 for i in range(ATTEMPTS):
     try:
         logging.info("PASSFILE: %s, exist=%s", PGPASSFILE, Path(PGPASSFILE).exists()) 
@@ -28,8 +29,10 @@ for i in range(ATTEMPTS):
         if i == ATTEMPTS - 1:
             raise e
         time.sleep(1)
+assert engine is not None
 
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False) # type: ignore
+
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 class Base(MappedAsDataclass, DeclarativeBase):
     pass
 
@@ -40,3 +43,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+SessionLocal().execute(text('CREATE EXTENSION IF NOT EXISTS vector')) 
+

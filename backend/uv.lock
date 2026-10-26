@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.14"
 
 [[package]]
@@ -491,6 +491,7 @@ dependencies = [
     { name = "alembic" },
     { name = "fastapi", extra = ["standard"] },
     { name = "pendulum" },
+    { name = "pgvector" },
     { name = "psycopg2-binary" },
     { name = "python-magic" },
     { name = "python-multipart" },
@@ -503,6 +504,7 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.20.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.110" },
     { name = "pendulum", specifier = ">=3.3.0" },
+    { name = "pgvector", specifier = ">=0.5.1" },
     { name = "psycopg2-binary" },
     { name = "python-magic", specifier = ">=0.4.27" },
     { name = "python-multipart", specifier = ">=0.0.32" },
@@ -780,6 +782,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/70/00/bddac0418227afb8dcf3cd5fe9a3e5265f6faa1d7ec1426257dc4778a2c3/pendulum-3.3.0-cp315-cp315t-musllinux_1_1_x86_64.whl", hash = "sha256:e9214fc9b1e2aff5cde8c4d29c6f48e961a003f6c866ecba46594d6beee46045", size = 553674, upload-time = "2026-10-12T20:53:54.602Z" },
     { url = "https://files.pythonhosted.org/packages/e2/d1/c73c5eb59c7b404d068e58ee9b067165da645b1ebe77c17846064452a294/pendulum-3.3.0-cp315-cp315t-win_arm64.whl", hash = "sha256:9a4c7da841666c50e9c70e363d7d94c61e32558255ca282ba66bef48fbf5c16f", size = 252245, upload-time = "2026-10-12T20:53:56.216Z" },
     { url = "https://files.pythonhosted.org/packages/af/d8/2733a7d2533a61bd3f94a996f5ce2a0784d6ed3636dc2d4adb0c1f9fbb0f/pendulum-3.3.0-py3-none-any.whl", hash = "sha256:3a89816a1aaa6f068fe17f30ddd6c5d9a4a8dad62f8612da28c29a8810773fd4", size = 116287, upload-time = "2026-10-12T20:54:10.052Z" },
+]
+
+[[package]]
+name = "pgvector"
+version = "0.5.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/f8/23/96aa38899fbf8e103766db608d6e42acac269a96e08f3003fe9da3396fed/pgvector-0.5.1.tar.gz", hash = "sha256:94998a54b801b1075d623b8fa677fcb8210a7977b88f8e2203ab115c155af2e4", size = 35714, upload-time = "2026-10-09T01:50:22.779Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a2/8d/a9c2a531da0ebb54b4a7174450e8534a39db112a141ae3a437de28420111/pgvector-0.5.1-py3-none-any.whl", hash = "sha256:ec5bcd5ffaefe6ecb2dcc9564ca921d284564b969183bc837a144604773af8ea", size = 31056, upload-time = "2026-10-09T01:50:21.614Z" },
 ]
 
 [[package]]

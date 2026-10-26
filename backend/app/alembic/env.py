@@ -1,5 +1,6 @@
 from logging.config import fileConfig
 import os
+from pathlib import Path
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -60,8 +61,9 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    db_url = os.environ["POSTGRES_URL"]
-    db_passfile = os.environ["PGPASSFILE"]
+    db_url = os.environ.get("POSTGRES_URL", "postgresql+psycopg2://main@127.0.0.1:5433/lafs")
+    db_passfile = os.environ.get("PGPASSFILE", (Path(__file__).parent.parent.parent.parent / "secrets/.pgpass").as_posix())
+    
     connectable = engine_from_config(
         {
             "sqlalchemy.url": db_url
