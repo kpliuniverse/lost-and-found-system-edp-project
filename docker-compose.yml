@@ -2,8 +2,10 @@
 services:
     backend:
         depends_on:
-            - database
-            - ollama
+            database:
+                condition: service_started
+            ollama:
+                condition: service_healthy
         image: lufs-backend
         pull_policy: never
         container_name: lufs-backend
@@ -73,6 +75,12 @@ services:
         tty: true
         restart: unless-stopped
         entrypoint: ["/bin/sh", "/model_files/run_ollama.sh"]
+        healthcheck:
+            test: ["CMD", "ollama", "show", "nomic-embed-text"]
+            interval: 5s
+            timeout: 5s
+            retries: 30
+            start_period: 5s
     
 
 volumes:
