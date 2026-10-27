@@ -18,7 +18,7 @@ class Item(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, init=False)
     status: Mapped[str] = mapped_column(String(10), index=True)  # "lost" or "found"
     title: Mapped[str] = mapped_column(String(120))
-    embedding: Mapped[list[float]] = mapped_column(VECTOR(256))
+    embedding: Mapped[list[float]] = mapped_column(VECTOR(768))
     category: Mapped[str] = mapped_column(String(40), index=True)
     location: Mapped[str] = mapped_column(String(160))
     event_date: Mapped[date] = mapped_column(Date)  # day it was lost / found

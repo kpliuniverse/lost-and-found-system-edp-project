@@ -3,6 +3,7 @@ services:
     backend:
         depends_on:
             - database
+            - ollama
         image: lufs-backend
         pull_policy: never
         container_name: lufs-backend
@@ -12,6 +13,7 @@ services:
         environment:
             PGPASSFILE: /run/secrets/pgpass
             POSTGRES_URL: postgresql+psycopg2://main@database:5433/lafs
+            OLLAMA_HOST: http://ollama:11434
         secrets:
             - pgpass
         command:

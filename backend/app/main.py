@@ -1,6 +1,8 @@
 from copy import deepcopy
 import logging
 
+import ollama
+
 logging.basicConfig(level=logging.DEBUG)
 
 from pathlib import Path
@@ -19,8 +21,7 @@ from .models import Item, PostImage
 from .schemas import ItemCreate, ItemOut, Status
 from .security import hash_pin, verify_pin
 
-
-
+SIMILARITY_THRESHOLD = 0.50
 
 Base.metadata.create_all(bind=engine)
 
@@ -33,6 +34,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def gen_embedding_string(item: ItemCreate | Item):
+    return (
+        f"{item.title},"
+        f"{item.description}, "
+        f"Found in {item.location}"
+    )
+
+def get_embedding(text: str):
+    response = ollama.embed(model="nomic-embed-text", input=text)
+    logging.debug("Embeddings = %i", len(response.embeddings))
+    return response["embeddings"][0]
 
 def get_item_or_404(item_id: int, db: Session) -> Item:
     item = db.get(Item, item_id)
@@ -118,11 +130,13 @@ def get_image(filename: str):
 @app.post("/api/items", response_model=ItemOut, status_code=status.HTTP_201_CREATED)
 def create_item(payload: ItemCreate, db: Session = Depends(get_db)):
     data = payload.model_dump(exclude={"pin", "image_filenames"})
-    item = Item(**data, pin_hash=hash_pin(payload.pin))
+    embedding_str = gen_embedding_string(payload)
+    
+    item = Item(**data, embedding=get_embedding(embedding_str), pin_hash=hash_pin(payload.pin))
     db.add(item)
     db.commit()
     db.refresh(item)
-
+    
     if payload.image_filenames:
         non_existent_images = []
         for image_path in payload.image_filenames:
@@ -164,3 +178,14 @@ def delete_item(
     db.delete(item)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@app.get("/api/similaritems/{item_id}", response_model=list[ItemOut])
+def get_similar_items(item_id: int, db: Session = Depends(get_db)):
+    
+    item = get_item_or_404(item_id, db)
+    embedding_statement = Item.embedding.cosine_distance(get_embedding(gen_embedding_string(item)))
+    return db.scalars(select(Item)
+                      .order_by(embedding_statement)
+                      .filter(Item.status != item.status)
+                      .filter(embedding_statement < SIMILARITY_THRESHOLD)).all()
