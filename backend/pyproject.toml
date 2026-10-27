@@ -8,7 +8,7 @@ exclude = ["wheels*"]
 
 [project]
 name = "lost-and-found-backend"
-requires-python = ">=3.14"
+requires-python = "==3.14.9"
 version = "0.1.0"
 dependencies = [
     "fastapi[standard]>=0.110",
@@ -21,6 +21,8 @@ dependencies = [
     "python-magic>=0.4.27",
     "pgvector>=0.5.1",
     "ollama>=0.6.3",
+    "sentence-transformers[image]>=6.2.0",
+    "pillow>=13.0.0",
 ]
 
 [tool.fastapi]

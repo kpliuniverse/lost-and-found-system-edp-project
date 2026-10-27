@@ -38,7 +38,7 @@ class PostImage(Base):
     filename: Mapped[str] = mapped_column(String())
     post_id: Mapped[int] = mapped_column(ForeignKey(Item.id), init=False)
     post: Mapped[Item] = relationship(back_populates="images")
-
+    image_embedding: Mapped[list[float] | None] = mapped_column(VECTOR(512), nullable=True)
     __table_args__ = (
         UniqueConstraint("filename", "post_id"),
     )

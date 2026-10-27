@@ -1,7 +1,9 @@
 from copy import deepcopy
+from functools import lru_cache
 import logging
 
 import ollama
+from sentence_transformers import SentenceTransformer
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -13,15 +15,20 @@ from fastapi import Depends, FastAPI, Header, HTTPException, Response, status, U
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from sqlalchemy import or_, select
+from sqlalchemy import or_, select, func
 from sqlalchemy.orm import Session
 
 from .database import Base, engine, get_db
 from .models import Item, PostImage
 from .schemas import ItemCreate, ItemOut, Status
 from .security import hash_pin, verify_pin
+from PIL import Image
 
-SIMILARITY_THRESHOLD = 0.45
+TEXT_SIMILARITY_THRESHOLD = 0.65
+TEXT_SIMILARITY_WEIGHT = 0.35
+IMAGE_SIMILARITY_THRESHOLD = 0.50
+IMAGE_SIMILARITY_WEIGHT = 0.65
+FINAL_SIMILARITY_THRESHOLD = 0.45
 
 Base.metadata.create_all(bind=engine)
 
@@ -33,6 +40,36 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+MODEL_NAME = "sentence-transformers/clip-ViT-B-32"
+
+
+@lru_cache(maxsize=1)
+def get_model() -> SentenceTransformer:
+    # Load once, not once per API request.
+    return SentenceTransformer(MODEL_NAME)
+
+def embed_text_for_image(text: str) -> list[float]:
+    model = get_model()
+
+    embedding = model.encode(
+        text,
+        normalize_embeddings=True,
+    )
+
+    return embedding.tolist()
+
+
+def embed_image(image: Image.Image) -> list[float]:
+    model = get_model()
+
+    image = image.convert("RGB")
+
+    embedding = model.encode(
+        image,
+        normalize_embeddings=True,
+    )
+
+    return embedding.tolist()
 
 def gen_embedding_string(item: ItemCreate | Item):
     return (
@@ -41,7 +78,10 @@ def gen_embedding_string(item: ItemCreate | Item):
         f"Found in {item.location}"
     )
 
-def get_embedding(text: str):
+def gen_img_embedding_string(item: ItemCreate | Item):
+    return f"{item.title}, {item.description}"
+
+def get_embedding(text: str) -> list[float]:
     response = ollama.embed(model="nomic-embed-text", input=text)
     logging.debug("Embeddings = %i", len(response.embeddings))
     return response["embeddings"][0]
@@ -145,7 +185,9 @@ def create_item(payload: ItemCreate, db: Session = Depends(get_db)):
         if non_existent_images:
             raise HTTPException(status_code=400, detail=f"Images {', '.join(non_existent_images)} do not exist")
         for image_path in payload.image_filenames:
-            item.images.append(PostImage(filename=image_path, post=item))
+            with Image.open(UPLOAD_DIR / image_path) as image:
+                embedding = embed_image(image)
+            item.images.append(PostImage(filename=image_path, post=item, image_embedding=embedding))
     db.commit()
     db.refresh(item)
     return item
@@ -184,8 +226,24 @@ def delete_item(
 def get_similar_items(item_id: int, db: Session = Depends(get_db)):
     
     item = get_item_or_404(item_id, db)
-    embedding_statement = Item.embedding.cosine_distance(get_embedding(gen_embedding_string(item)))
-    return db.scalars(select(Item)
-                      .order_by(embedding_statement)
-                      .filter(Item.status != item.status)
-                      .filter(embedding_statement < SIMILARITY_THRESHOLD)).all()
+
+    
+    text_embedding_statement = Item.embedding.cosine_distance(get_embedding(gen_embedding_string(item)))
+    image_embedding_statement = Item.embedding.cosine_distance(embed_text_for_image(gen_img_embedding_string(item)))
+
+    text_sim = (
+                        select(Item.id.label("id"), text_embedding_statement.label("text_distance"))
+                    #   .order_by(text_embedding_statement)
+                        .filter(Item.status != item.status)
+                        .filter(text_embedding_statement < TEXT_SIMILARITY_THRESHOLD)
+                        .cte("text_similarities")
+                      )
+
+    image_sim = (
+                        select(Item.id.label("id"), image_embedding_statement.label("image_distance"))
+                        .filter(Item.status != item.status)
+                        .filter(text_embedding_statement < IMAGE_SIMILARITY_THRESHOLD)
+                        .cte("image_similarities")
+                        )
+
+    select(text_sim, image_sim).join(image_sim, text_sim. isouter=True)

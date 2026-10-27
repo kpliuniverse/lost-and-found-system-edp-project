@@ -8,3 +8,5 @@ python-multipart>=0.0.32
 python-magic>=0.4.27
 pgvector>=0.5.1
 ollama>=0.6.3
+sentence-transformers[image]>=6.2.0
+pillow>=13.0.0
