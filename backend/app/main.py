@@ -21,7 +21,7 @@ from .models import Item, PostImage
 from .schemas import ItemCreate, ItemOut, Status
 from .security import hash_pin, verify_pin
 
-SIMILARITY_THRESHOLD = 0.50
+SIMILARITY_THRESHOLD = 0.45
 
 Base.metadata.create_all(bind=engine)
 
