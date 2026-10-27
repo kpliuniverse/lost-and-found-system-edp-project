@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { deleteItem, getItem, markReturned, getImageUrl } from "../api.js";
+import { deleteItem, getItem, markReturned, getImageUrl, getSimilarItems } from "../api.js";
 import { formatDate, statusLabel } from "../utils.js";
+import ItemCard from "../components/ItemCard.jsx"
 import ThumbnailCarousel from "../components/ThumbnailCarousel.jsx";
 
 export default function ItemPage() {
@@ -12,6 +13,8 @@ export default function ItemPage() {
   const [item, setItem] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [notice, setNotice] = useState(location.state?.notice || "");
+
+  const [similarItems, setSimilarItems] = useState([]);
 
   const [pin, setPin] = useState("");
   const [busy, setBusy] = useState(false);
@@ -37,6 +40,9 @@ export default function ItemPage() {
     }
   }, [selectedImage]);
 
+  useEffect(() => {
+    getSimilarItems(id).then(setSimilarItems)
+  }, [id])
   async function handleReturned() {
     setBusy(true);
     setActionError("");
@@ -185,6 +191,16 @@ export default function ItemPage() {
         </button>
         {selectedImage && <img src={selectedImage} alt={`${item.title} full size`} />}
       </dialog>
+      <section style={{margin: "28px"}}>
+        <h2 >Potential candidates</h2>
+        <div className="grid">
+            {similarItems.map((item) => (
+              <ItemCard key={item.id} item={item} />
+            ))}
+        </div>
+      </section>
     </section>
+
+
   );
 }

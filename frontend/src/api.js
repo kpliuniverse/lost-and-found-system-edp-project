@@ -41,6 +41,7 @@ export function listItems({ q, status, category, includeResolved }, signal) {
   return request(`/items?${params}`, { signal });
 }
 
+export const getSimilarItems = (id) => request(`/similaritems/${id}`)
 export const getItem = (id) => request(`/items/${id}`);
 
 export const createItem = (data) =>
