@@ -1,8 +1,12 @@
 from copy import deepcopy
+from io import BytesIO
 import logging
+import os
+from urllib.parse import urlsplit
 
 import ollama
 from PIL import Image
+from vercel.blob import sync as blob
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -35,6 +39,8 @@ FINAL_SIMILARITY_THRESHOLD = 1
 SCORE_IF_NO_IMAGE = 0.75
 SCORE_IF_NO_DESC = 0.4
 
+ollama_client = ollama.Client(host=os.environ.get("OLLAMA_HOST"))
+
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Lost and Found API")
@@ -56,9 +62,10 @@ def gen_embedding_string(item: ItemCreate | Item):
 
 
 def get_embedding(text: str) -> list[float]:
-    response = ollama.embed(model="nomic-embed-text", input=text)
+    response = ollama_client.embed(model="nomic-embed-text", input=text)
     logging.debug("Embeddings = %i", len(response.embeddings))
     return response["embeddings"][0]
+
 
 def get_item_or_404(item_id: int, db: Session) -> Item:
     item = db.get(Item, item_id)
@@ -111,14 +118,57 @@ def list_items(
 def get_item(item_id: int, db: Session = Depends(get_db)):
     return get_item_or_404(item_id, db)
 
-UPLOAD_DIR = Path("/image_uploads")
+IS_VERCEL = bool(os.environ.get("VERCEL"))
+BLOB_ENABLED = bool(os.environ.get("BLOB_READ_WRITE_TOKEN"))
+UPLOAD_DIR = Path(
+    os.environ.get(
+        "IMAGE_UPLOAD_DIR",
+        "/tmp/image_uploads" if IS_VERCEL else "/image_uploads",
+    )
+)
 
-UPLOAD_DIR.mkdir(exist_ok=True)
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def get_image_bytes(image_reference: str) -> bytes:
+    if image_reference.startswith("https://"):
+        hostname = urlsplit(image_reference).hostname
+        if not hostname or not hostname.endswith(".public.blob.vercel-storage.com"):
+            raise HTTPException(status_code=400, detail="Image URL is not a Vercel Blob URL")
+        return blob.get_blob(image_reference, access="public").body
+
+    if "://" in image_reference or Path(image_reference).name != image_reference:
+        raise HTTPException(status_code=400, detail="Invalid image reference")
+
+    path = UPLOAD_DIR / image_reference
+    if not path.is_file():
+        raise HTTPException(status_code=400, detail=f"Image '{image_reference}' does not exist")
+    return path.read_bytes()
+
 
 @app.post("/api/uploadimage")
 def upload_image(file: UploadFile):
     if file.filename is None or file.filename == "":
         raise HTTPException(status_code=400, detail="No file selected")
+
+    if BLOB_ENABLED:
+        file.file.seek(0, 2)
+        content_length = file.file.tell()
+        file.file.seek(0)
+        uploaded = blob.put_blob(
+            f"item-images/{uuid4()}{Path(file.filename).suffix}",
+            file.file,
+            content_length=content_length,
+            access="public",
+            content_type=file.content_type,
+        )
+        return {"location": uploaded.url}
+
+    if IS_VERCEL:
+        raise HTTPException(
+            status_code=500,
+            detail="Vercel Blob is not configured. Add a Blob store to this project.",
+        )
 
     while (dst := UPLOAD_DIR / f"{str(uuid4())}{Path(file.filename).suffix}").exists():
         pass
@@ -157,16 +207,16 @@ def create_item(payload: ItemCreate, db: Session = Depends(get_db)):
     db.refresh(item)
     
     if payload.image_filenames:
-        non_existent_images = []
-        for image_path in payload.image_filenames:
-            if not (image_path := UPLOAD_DIR / image_path).exists():
-                non_existent_images.append(f"'{image_path.as_posix()}'")
-        if non_existent_images:
-            raise HTTPException(status_code=400, detail=f"Images {', '.join(non_existent_images)} do not exist")
-        for image_path in payload.image_filenames:
-            with Image.open(UPLOAD_DIR / image_path) as image:
+        for image_reference in payload.image_filenames:
+            with Image.open(BytesIO(get_image_bytes(image_reference))) as image:
                 embedding = embed_image(image)
-            item.images.append(PostImage(filename=image_path, post=item, image_embedding=embedding))
+            item.images.append(
+                PostImage(
+                    filename=image_reference,
+                    post=item,
+                    image_embedding=embedding,
+                )
+            )
     db.commit()
     db.refresh(item)
     return item
@@ -234,7 +284,7 @@ def get_similar_items(item_id: int, db: Session = Depends(get_db)):
         selects = []
 
         for image in item.images:
-            with Image.open(UPLOAD_DIR / image.filename) as img:
+            with Image.open(BytesIO(get_image_bytes(image.filename))) as img:
                 e = embed_image(img)
 
             dist = Item.image_pair_embedding.cosine_distance(e)

@@ -64,6 +64,25 @@ Run `docker compose up` at the terminal
 
 Open the website at **http://localhost:5173/**. 
 
+## Deploy on Vercel
+
+The root `vercel.json` deploys the Vite frontend, FastAPI backend container,
+and Ollama container as services. The frontend is public at `/`; `/api/*` and
+`/static/*` are routed to the backend. Ollama stays internal and the backend
+uses the `OLLAMA_HOST` service binding.
+
+Before deploying, connect Vercel Postgres/Neon with the `vector` extension
+and provide its connection URL as `POSTGRES_URL`. The database is a managed
+integration, not a Vercel service in `vercel.json`. Add a Vercel Blob store to
+the project so Vercel provides `BLOB_READ_WRITE_TOKEN`; uploaded images are
+public Blob objects, and their URLs are saved in PostgreSQL. `PGPASSFILE` is
+optional when the database URL contains credentials.
+
+The backend image includes its CLIP model cache, and the Ollama image includes
+`nomic-embed-text`. Both use CPU inference, so image build time, image size, and
+request latency/resource limits should be checked in a real Vercel deployment.
+Use `vercel dev` to test service routing and bindings locally.
+
 ---
 
 ## API

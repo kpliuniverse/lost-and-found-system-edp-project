@@ -23,6 +23,7 @@ dependencies = [
     "ollama>=0.6.3",
     "sentence-transformers[image]>=6.2.0",
     "pillow>=13.0.0",
+    "vercel-blob>=0.5.0",
 ]
 
 [tool.fastapi]

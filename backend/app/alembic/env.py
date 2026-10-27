@@ -62,7 +62,12 @@ def run_migrations_online() -> None:
 
     """
     db_url = os.environ.get("POSTGRES_URL", "postgresql+psycopg2://main@127.0.0.1:5433/lafs")
-    db_passfile = os.environ.get("PGPASSFILE", (Path(__file__).parent.parent.parent.parent / "secrets/.pgpass").as_posix())
+    db_passfile = os.environ.get("PGPASSFILE")
+    if db_passfile is None:
+        default_passfile = Path(__file__).parent.parent.parent.parent / "secrets/.pgpass"
+        if default_passfile.is_file():
+            db_passfile = default_passfile.as_posix()
+    connect_args = {"passfile": db_passfile} if db_passfile else {}
     
     connectable = engine_from_config(
         {
@@ -70,9 +75,7 @@ def run_migrations_online() -> None:
         },
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
-        connect_args={
-            "passfile": db_passfile,
-        },
+        connect_args=connect_args,
     )
 
     with connectable.connect() as connection:

@@ -14,13 +14,19 @@ from sqlalchemy.orm import (
 
 # Database might start later than it creates the engine
 DATABASE_URL = os.environ.get("POSTGRES_URL", "postgresql+psycopg2://main@127.0.0.1:5433/lafs")
-PGPASSFILE = os.environ.get("PGPASSFILE", (Path(__file__).parent.parent.parent / "secrets/.pgpass").as_posix())
+PGPASSFILE = os.environ.get("PGPASSFILE")
+if PGPASSFILE is None:
+    default_passfile = Path(__file__).parent.parent.parent / "secrets/.pgpass"
+    if default_passfile.is_file():
+        PGPASSFILE = default_passfile.as_posix()
+CONNECT_ARGS = {"passfile": PGPASSFILE} if PGPASSFILE else {}
 ATTEMPTS = 8
 engine = None
 for i in range(ATTEMPTS):
     try:
-        logging.info("PASSFILE: %s, exist=%s", PGPASSFILE, Path(PGPASSFILE).exists()) 
-        engine = create_engine(DATABASE_URL, connect_args={"passfile": PGPASSFILE})
+        if PGPASSFILE:
+            logging.info("PASSFILE: %s, exist=%s", PGPASSFILE, Path(PGPASSFILE).exists())
+        engine = create_engine(DATABASE_URL, connect_args=CONNECT_ARGS)
         connection_success = True
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))

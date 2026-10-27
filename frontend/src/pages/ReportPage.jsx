@@ -61,11 +61,13 @@ export default function ReportPage() {
           const currentBytes = completedBytes + Math.min(loaded, file.size);
           setUploadProgress(totalBytes ? Math.round((currentBytes / totalBytes) * 100) : 100);
         });
-        const filename = location?.split("/").pop();
-        if (!filename) {
-          throw new Error(`The upload response for "${file.name}" did not include a filename.`);
+        const imageReference = location?.startsWith("https://")
+          ? location
+          : location?.split("/").pop();
+        if (!imageReference) {
+          throw new Error(`The upload response for "${file.name}" did not include an image location.`);
         }
-        setImages((current) => [...current, { file, filename }]);
+        setImages((current) => [...current, { file, filename: imageReference }]);
         completedBytes += file.size;
         setUploadProgress(totalBytes ? Math.round((completedBytes / totalBytes) * 100) : 100);
       }

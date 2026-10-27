@@ -30,6 +30,7 @@ async function request(path, { headers, ...options } = {}) {
 }
 
 export function getImageUrl (filename) {
+  if (/^https:\/\//i.test(filename)) return filename;
   return `/static/image/${filename}`
 }
 export function listItems({ q, status, category, includeResolved }, signal) {
