@@ -31,11 +31,6 @@ for i in range(ATTEMPTS):
         time.sleep(1)
 assert engine is not None
 
-
-SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
-class Base(MappedAsDataclass, DeclarativeBase):
-    pass
-
 def get_db():
     """Give each request its own database session, then close it."""
     db = SessionLocal()
@@ -45,5 +40,10 @@ def get_db():
         db.close()
 
 
-SessionLocal().execute(text('CREATE EXTENSION IF NOT EXISTS vector')) 
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
+with engine.begin() as conn:
+    conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+
+class Base(MappedAsDataclass, DeclarativeBase):
+    pass
