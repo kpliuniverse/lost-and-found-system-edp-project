@@ -12,8 +12,12 @@ from sqlalchemy.orm import (
     sessionmaker,
 )
 
+from app.database_url import normalize_postgres_url
+
 # Database might start later than it creates the engine
-DATABASE_URL = os.environ.get("POSTGRES_URL", "postgresql+psycopg2://main@127.0.0.1:5433/lafs")
+DATABASE_URL = normalize_postgres_url(
+    os.environ.get("POSTGRES_URL", "postgresql+psycopg2://main@127.0.0.1:5433/lafs")
+)
 PGPASSFILE = os.environ.get("PGPASSFILE")
 if PGPASSFILE is None:
     default_passfile = Path(__file__).parent.parent.parent / "secrets/.pgpass"

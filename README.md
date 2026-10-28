@@ -76,7 +76,9 @@ and provide its connection URL as `POSTGRES_URL`. The database is a managed
 integration, not a Vercel service in `vercel.json`. Add a Vercel Blob store to
 the project so Vercel provides `BLOB_READ_WRITE_TOKEN`; uploaded images are
 public Blob objects, and their URLs are saved in PostgreSQL. `PGPASSFILE` is
-optional when the database URL contains credentials.
+optional when the database URL contains credentials. The backend uses
+`psycopg2-binary`; if the URL selects `postgresql+psycopg`, the backend
+normalizes it to the installed `psycopg2` driver.
 
 The backend image includes its CLIP model cache, and the Ollama image includes
 `nomic-embed-text`. Both use CPU inference, so image build time, image size, and

@@ -8,6 +8,7 @@ from sqlalchemy import pool
 from alembic import context
 
 from app.database import Base
+from app.database_url import normalize_postgres_url
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -61,7 +62,9 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    db_url = os.environ.get("POSTGRES_URL", "postgresql+psycopg2://main@127.0.0.1:5433/lafs")
+    db_url = normalize_postgres_url(
+        os.environ.get("POSTGRES_URL", "postgresql+psycopg2://main@127.0.0.1:5433/lafs")
+    )
     db_passfile = os.environ.get("PGPASSFILE")
     if db_passfile is None:
         default_passfile = Path(__file__).parent.parent.parent.parent / "secrets/.pgpass"
