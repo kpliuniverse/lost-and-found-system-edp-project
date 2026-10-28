@@ -82,11 +82,12 @@ normalizes it to the installed `psycopg2` driver.
 
 No Hugging Face token or paid Inference Endpoint is required: the backend
 downloads the public model weights from the Hugging Face Hub when first needed
-and reuses the loaded model while the process is running. Vercel cold starts
-may therefore include model download and initialization time. The backend also
+and reuses each loaded model while the process is running. Models load lazily
+so they do not delay the API from binding to Vercel's port; the first matching
+request may include model download and initialization time. The backend also
 uses its CLIP model for image matching. Both model caches are runtime data, not
-bundled in the container image. Check startup time, memory, and request limits
-in a real Vercel deployment. Use `vercel dev` to test locally.
+bundled in the container image. Check request time, memory, and limits in a
+real Vercel deployment. Use `vercel dev` to test locally.
 
 The backend sends `search_document:` inputs when saving item embeddings and
 `search_query:` inputs when finding similar items. Rebuild existing item text

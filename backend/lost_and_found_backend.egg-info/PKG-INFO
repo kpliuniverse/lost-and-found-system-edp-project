@@ -1,7 +1,7 @@
 Metadata-Version: 2.4
 Name: lost-and-found-backend
 Version: 0.1.0
-Requires-Python: >=3.14
+Requires-Python: ==3.14.9
 Requires-Dist: fastapi[standard]>=0.110
 Requires-Dist: uvicorn[standard]>=0.29
 Requires-Dist: sqlalchemy>=2.0
@@ -12,3 +12,9 @@ Requires-Dist: python-multipart>=0.0.32
 Requires-Dist: python-magic>=0.4.27
 Requires-Dist: pgvector>=0.5.1
 Requires-Dist: ollama>=0.6.3
+Requires-Dist: sentence-transformers[image]>=6.2.0
+Requires-Dist: torch>=2.14.1
+Requires-Dist: torchvision>=0.29.1
+Requires-Dist: pillow>=13.0.0
+Requires-Dist: vercel-blob>=0.5.0
+Requires-Dist: psycopg[binary]>=3.3.6

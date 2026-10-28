@@ -22,4 +22,4 @@ ENV PATH="/app/.venv/bin:$PATH" \
     HF_HUB_DISABLE_TELEMETRY=1
 
 EXPOSE 80
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-80}"]

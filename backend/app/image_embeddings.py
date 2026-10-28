@@ -1,8 +1,12 @@
+from __future__ import annotations
+
 from functools import lru_cache
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from PIL import Image
-from sentence_transformers import SentenceTransformer
+
+if TYPE_CHECKING:
+    from sentence_transformers import SentenceTransformer
 
 MODEL_NAME = "sentence-transformers/clip-ViT-B-32"
 
@@ -14,6 +18,8 @@ class ImageTextItem(Protocol):
 
 @lru_cache(maxsize=1)
 def get_model() -> SentenceTransformer:
+    from sentence_transformers import SentenceTransformer
+
     return SentenceTransformer(MODEL_NAME)
 
 
@@ -29,6 +35,3 @@ def embed_image(image: Image.Image) -> list[float]:
 
 def gen_img_embedding_string(item: ImageTextItem) -> str:
     return f"{item.title}, {item.description}"
-
-# Run once on startup so that the first request won't take as long
-get_model()

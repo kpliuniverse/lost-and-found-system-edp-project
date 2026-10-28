@@ -1,12 +1,18 @@
-from functools import lru_cache
+from __future__ import annotations
 
-from sentence_transformers import SentenceTransformer
+from functools import lru_cache
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sentence_transformers import SentenceTransformer
 
 MODEL_NAME = "nomic-ai/nomic-embed-text-v1.5"
 
 
 @lru_cache(maxsize=1)
 def get_model() -> SentenceTransformer:
+    from sentence_transformers import SentenceTransformer
+
     return SentenceTransformer(MODEL_NAME, trust_remote_code=True)
 
 
