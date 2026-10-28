@@ -7,6 +7,7 @@ app/main.py
 app/models.py
 app/schemas.py
 app/security.py
+app/text_embeddings.py
 app/alembic/env.py
 app/alembic/versions/26b4f5520c08_turns_out_ollama_requires_768_length.py
 app/alembic/versions/3c0d8f41a2b7_add_item_image_pair_embedding.py
