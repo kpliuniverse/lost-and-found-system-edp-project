@@ -9,6 +9,7 @@ from PIL import Image
 from vercel.blob import sync as blob
 
 logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 from pathlib import Path
 from uuid import uuid4
@@ -220,33 +221,38 @@ def get_image(filename: str):
 # ---------- ADD / CREATE ----------
 @app.post("/api/items", response_model=ItemOut, status_code=status.HTTP_201_CREATED)
 def create_item(payload: ItemCreate, db: Session = Depends(get_db)):
-    data = payload.model_dump(exclude={"pin", "image_filenames"})
-    embedding_str = gen_embedding_string(payload)
-    
-    item = Item(
-        **data,
-        embedding=get_embedding(embedding_str),
-        image_pair_embedding=embed_text_for_image(gen_img_embedding_string(payload)),
-        pin_hash=hash_pin(payload.pin),
-    )
-    db.add(item)
-    db.commit()
-    db.refresh(item)
-    
-    if payload.image_filenames:
-        for image_reference in payload.image_filenames:
-            with Image.open(BytesIO(get_image_bytes(image_reference))) as image:
-                embedding = embed_image(image)
-            item.images.append(
-                PostImage(
-                    filename=image_reference,
-                    post=item,
-                    image_embedding=embedding,
+    try:
+        data = payload.model_dump(exclude={"pin", "image_filenames"})
+        embedding_str = gen_embedding_string(payload)
+
+        item = Item(
+            **data,
+            embedding=get_embedding(embedding_str),
+            image_pair_embedding=embed_text_for_image(gen_img_embedding_string(payload)),
+            pin_hash=hash_pin(payload.pin),
+        )
+        db.add(item)
+        db.flush()
+
+        if payload.image_filenames:
+            for image_reference in payload.image_filenames:
+                with Image.open(BytesIO(get_image_bytes(image_reference))) as image:
+                    embedding = embed_image(image)
+                item.images.append(
+                    PostImage(
+                        filename=image_reference,
+                        post=item,
+                        image_embedding=embedding,
+                    )
                 )
-            )
-    db.commit()
-    db.refresh(item)
-    return item
+
+        db.commit()
+        db.refresh(item)
+        return item
+    except Exception:
+        logger.exception("Unexpected error while creating an item")
+        db.rollback()
+        raise
 
 
 # ---------- MARK AS RETURNED ----------
