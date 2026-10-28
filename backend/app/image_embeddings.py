@@ -29,3 +29,6 @@ def embed_image(image: Image.Image) -> list[float]:
 
 def gen_img_embedding_string(item: ImageTextItem) -> str:
     return f"{item.title}, {item.description}"
+
+# Run once on startup so that the first request won't take as long
+get_model()

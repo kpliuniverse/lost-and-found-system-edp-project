@@ -8,7 +8,7 @@
     "backend": {
       "root": "backend",
       "runtime": "container",
-      "entrypoint": "Dockerfile",
+      "entrypoint": "Vercel.Dockerfile",
       "bindings": [
         {
           "type": "service",
