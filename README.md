@@ -66,10 +66,10 @@ Open the website at **http://localhost:5173/**.
 
 ## Deploy on Vercel
 
-The root `vercel.json` deploys the Vite frontend, FastAPI backend container,
-and Ollama container as services. The frontend is public at `/`; `/api/*` and
-`/static/*` are routed to the backend. Ollama stays internal and the backend
-uses the `OLLAMA_HOST` service binding.
+The root `vercel.json` deploys the Vite frontend and FastAPI backend container.
+The frontend is public at `/`; `/api/*` and `/static/*` are routed to the backend.
+Text embeddings use `nomic-ai/nomic-embed-text-v1.5` through SentenceTransformers
+on Vercel; local Docker development continues to use Ollama.
 
 Before deploying, connect Vercel Postgres/Neon with the `vector` extension
 and provide its connection URL as `POSTGRES_URL`. The database is a managed
@@ -80,10 +80,19 @@ optional when the database URL contains credentials. The backend uses
 `psycopg2-binary`; if the URL selects `postgresql+psycopg`, the backend
 normalizes it to the installed `psycopg2` driver.
 
-The backend image includes its CLIP model cache, and the Ollama image includes
-`nomic-embed-text`. Both use CPU inference, so image build time, image size, and
-request latency/resource limits should be checked in a real Vercel deployment.
-Use `vercel dev` to test service routing and bindings locally.
+No Hugging Face token or paid Inference Endpoint is required: the backend
+downloads the public model weights from the Hugging Face Hub when first needed
+and reuses the loaded model while the process is running. Vercel cold starts
+may therefore include model download and initialization time. The backend also
+uses its CLIP model for image matching. Both model caches are runtime data, not
+bundled in the container image. Check startup time, memory, and request limits
+in a real Vercel deployment. Use `vercel dev` to test locally.
+
+The backend sends `search_document:` inputs when saving item embeddings and
+`search_query:` inputs when finding similar items. Rebuild existing item text
+embeddings before relying on similarity matching: the new prefixed vectors
+should not be compared with the old unprefixed vectors. Image embeddings are
+unaffected.
 
 ---
 

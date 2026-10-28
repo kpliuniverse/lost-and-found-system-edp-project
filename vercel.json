@@ -8,20 +8,7 @@
     "backend": {
       "root": "backend",
       "runtime": "container",
-      "entrypoint": "Vercel.Dockerfile",
-      "bindings": [
-        {
-          "type": "service",
-          "service": "ollama",
-          "format": "url",
-          "env": "OLLAMA_HOST"
-        }
-      ]
-    },
-    "ollama": {
-      "root": "model_files",
-      "runtime": "container",
-      "entrypoint": "Dockerfile"
+      "entrypoint": "Vercel.Dockerfile"
     }
   },
   "rewrites": [

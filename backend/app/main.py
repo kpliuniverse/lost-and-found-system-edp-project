@@ -30,6 +30,7 @@ from .image_embeddings import (
 from .models import Item, PostImage
 from .schemas import ItemCreate, ItemOut, Status
 from .security import hash_pin, verify_pin
+from .text_embeddings import embed_text
 
 TEXT_SIMILARITY_THRESHOLD = 0.65
 TEXT_SIMILARITY_WEIGHT = 0.35
@@ -38,6 +39,8 @@ IMAGE_SIMILARITY_WEIGHT = 0.65
 FINAL_SIMILARITY_THRESHOLD = 1
 SCORE_IF_NO_IMAGE = 0.75
 SCORE_IF_NO_DESC = 0.4
+TEXT_EMBEDDING_DIMENSION = 768
+IS_VERCEL = bool(os.environ.get("VERCEL"))
 
 ollama_client = ollama.Client(host=os.environ.get("OLLAMA_HOST"))
 
@@ -61,10 +64,35 @@ def gen_embedding_string(item: ItemCreate | Item):
     )
 
 
-def get_embedding(text: str) -> list[float]:
-    response = ollama_client.embed(model="nomic-embed-text", input=text)
-    logging.debug("Embeddings = %i", len(response.embeddings))
-    return response["embeddings"][0]
+def get_embedding(text: str, *, is_query: bool = False) -> list[float]:
+    if IS_VERCEL:
+        embedding = embed_text(text, is_query=is_query)
+    else:
+        task_prefix = "search_query" if is_query else "search_document"
+        response = ollama_client.embed(
+            model="nomic-embed-text",
+            input=f"{task_prefix}: {text}",
+        )
+        logging.debug("Embeddings = %i", len(response.embeddings))
+        embedding = response["embeddings"][0]
+
+    if (
+        not isinstance(embedding, list)
+        or len(embedding) != TEXT_EMBEDDING_DIMENSION
+        or any(
+            isinstance(value, bool) or not isinstance(value, (int, float))
+            for value in embedding
+        )
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=(
+                "Embedding provider returned an invalid vector; expected "
+                f"{TEXT_EMBEDDING_DIMENSION} numeric values."
+            ),
+        )
+
+    return [float(value) for value in embedding]
 
 
 def get_item_or_404(item_id: int, db: Session) -> Item:
@@ -118,7 +146,6 @@ def list_items(
 def get_item(item_id: int, db: Session = Depends(get_db)):
     return get_item_or_404(item_id, db)
 
-IS_VERCEL = bool(os.environ.get("VERCEL"))
 BLOB_ENABLED = bool(os.environ.get("BLOB_READ_WRITE_TOKEN"))
 UPLOAD_DIR = Path(
     os.environ.get(
@@ -257,7 +284,9 @@ def get_similar_items(item_id: int, db: Session = Depends(get_db)):
     item = get_item_or_404(item_id, db)
 
     
-    text_embedding_statement = Item.embedding.cosine_distance(get_embedding(gen_embedding_string(item)))
+    text_embedding_statement = Item.embedding.cosine_distance(
+        get_embedding(gen_embedding_string(item), is_query=True)
+    )
 
     text_sim = (
                     select(Item.id.label("id"), text_embedding_statement.label("text_dist"))
