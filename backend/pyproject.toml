@@ -27,6 +27,7 @@ dependencies = [
     "pillow>=13.0.0",
     "vercel-blob>=0.5.0",
     "psycopg[binary]>=3.3.6",
+    "einops>=0.8.2",
 ]
 
 [tool.fastapi]
